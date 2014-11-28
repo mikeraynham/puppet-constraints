@@ -151,11 +151,6 @@ module Puppet
         fail "cannot both allow and forbid values for #{duplicates * ","}" \
           unless duplicates.empty?
       end
-
-      # this check cannot move into parameter validation because the
-      # conversion to Puppet::Resource has not taken place yet then
-      fail "resource must be a(n array of) resource reference(s)" \
-        if ! self[:resource].select { |res| ! res.is_a? Puppet::Resource }.empty?
     end
 
     # Compatibility hack: we have no lifecycle method of resources' that fits
