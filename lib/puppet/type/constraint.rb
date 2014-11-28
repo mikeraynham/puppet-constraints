@@ -168,20 +168,35 @@ module Puppet
     end
 
     def pre_run_check
+      failures = Array.new
+
       self[:resource].each do |reference|
-        resource = self.catalog.resource(reference.to_s)
-        unless resource
-          # weak constraints just skip unmanaged resources
-          next if self[:weak] == :true
-          raise "the resource #{self[:resource]} cannot be found in the catalog"
+        begin
+
+          name = reference.to_s
+          resource = self.catalog.resource(name)
+          unless resource
+            # weak constraints just skip unmanaged resources
+            next if self[:weak] == :true
+            raise Puppet::Error, "Resource #{name} cannot be found in the catalog"
+          end
+
+          if self[:properties]
+            check_properties_hash(resource)
+          else
+            check_black_and_white_lists(resource)
+          end
+
+        rescue Puppet::Error => e
+          failures << e.message
         end
 
-        if self[:properties]
-          check_properties_hash(resource)
-        else
-          check_black_and_white_lists(resource)
-        end
       end
+
+      if failures.any?
+        raise Puppet::Error, failures.map { |f| "\n> " + f }.join()
+      end
+
       true
     end
 
